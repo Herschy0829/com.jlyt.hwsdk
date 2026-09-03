@@ -1,0 +1,21 @@
+# Unity
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Uu]ser[Ss]ettings/
+*.csproj
+*.sln
+*.user
+
+# IDE
+.vs/
+.vscode/
+.idea/
+
+# Native SDK downloads / imported iOS frameworks (imported via Editor tool, not versioned)
+Plugins/iOS/HwAdsNative/
+*.zip
+*.framework/

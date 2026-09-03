@@ -1,0 +1,23 @@
+{
+  "name": "com.jlyt.hwsdk",
+  "version": "0.9.1",
+  "displayName": "JLYT HwAds SDK",
+  "description": "Shared Unity module for the HW/GameBrain monetization SDK (AppLovin MAX based). Baselines: Android hwads 9.8.68, iOS HwAds 9.8.75. Provides a unified cross-platform C# API, per-version dependency manifests and Editor build integration.",
+  "unity": "2022.3",
+  "keywords": [
+    "hwads",
+    "hwsdk",
+    "max",
+    "applovin",
+    "ads",
+    "adjust",
+    "gamebrain"
+  ],
+  "author": {
+    "name": "JLYT",
+    "url": "https://github.com/Herschy0829"
+  },
+  "license": "UNLICENSED",
+  "documentationUrl": "https://github.com/Herschy0829/com.jlyt.hwsdk",
+  "dependencies": {}
+}
