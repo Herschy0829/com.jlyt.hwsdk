@@ -7,6 +7,9 @@
 
 ## Upstream version log (module changelog template)
 
+### 0.9.8 — 2026-09-03
+- 修复 git 依赖编译：补提交 `Editor/HwAdmobIdWindow.cs.meta` 与 `Editor/HwAppLovinKeyWindow.cs.meta`。缺失 .meta 会使 Unity 2022.3 将这两个 Editor 源排除出程序集编译，导致 `HwSdkWindow.cs` 引用报 CS0103（git 形态新接入工程必现）。
+
 ### 0.9.7 — 2026-09-03
 - 新增 Android 工具“设置 AppLovin Key”：把每工程自己的 Key 写入 launcherTemplate.gradle 的 applovin{apiKey}（显示时脱敏）。
 - 检测新增“launcherTemplate · AppLovin Key（每工程）”行：读取/校验/脱敏展示，行内可直接“设置”。
