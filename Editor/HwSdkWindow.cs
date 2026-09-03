@@ -36,6 +36,8 @@ namespace Jlyt.HwAds.Editor
             public CheckState state = CheckState.Info;
             public string detail;
             public string fix;
+            public string quickFixLabel;
+            public Action quickFix;
         }
 
         sealed class CheckGroup
@@ -55,6 +57,7 @@ namespace Jlyt.HwAds.Editor
         readonly List<CheckGroup> _groups = new List<CheckGroup>();
         readonly List<ToolEntry> _tools = new List<ToolEntry>();
         string _lastLog;
+        string _updateStatus;
         bool _checkedOnce;
 
         const string RepoUrl = "https://github.com/Herschy0829/com.jlyt.hwsdk";
@@ -212,8 +215,10 @@ namespace Jlyt.HwAds.Editor
                 state = !javaExists ? CheckState.Missing : (javaOk ? CheckState.Ok : CheckState.Warn),
                 detail = !javaExists ? "未安装到 Assets/Plugins/Android"
                        : javaOk ? "已安装且与模块版本一致"
-                       : "文件存在但与模块内容不一致（通常为行尾差异），建议重装",
-                fix = "运行工具“同步 Android Gradle 模板 + 安装桥源”重装，然后点“重新检测”",
+                       : "文件存在但与模块内容不一致（模块更新或本地改动），以模块版本覆盖",
+                fix = "点击右侧“修复”按钮重装，或运行工具“同步 Android Gradle 模板 + 安装桥源”",
+                quickFixLabel = "修复",
+                quickFix = QuickFixAndroid,
             });
 
             foreach (var cfg in new[]
@@ -293,8 +298,10 @@ namespace Jlyt.HwAds.Editor
                 state = !(bridgeH && bridgeM) ? CheckState.Missing : (bridgesOk ? CheckState.Ok : CheckState.Warn),
                 detail = !(bridgeH && bridgeM) ? "缺失于 Assets/Plugins/iOS"
                        : bridgesOk ? "已安装且与模块版本一致"
-                       : "文件存在但与模块内容不一致（通常为行尾差异），建议重装",
-                fix = "运行工具“安装 iOS 桥源”重装，然后点“重新检测”",
+                       : "文件存在但与模块内容不一致（模块更新或本地改动），以模块版本覆盖",
+                fix = "点击右侧“修复”按钮重装，或运行工具“安装 iOS 桥源”",
+                quickFixLabel = "修复",
+                quickFix = QuickFixIos,
             });
             g.items.Add(new CheckItem
             {
@@ -504,6 +511,75 @@ namespace Jlyt.HwAds.Editor
             RefreshAll();
         }
 
+        void QuickFixAndroid() => LogResult(HwNativeBridgeInstaller.InstallAndroid(out string log), log);
+        void QuickFixIos() => LogResult(HwNativeBridgeInstaller.InstallIos(out string log), log);
+
+        void CheckForUpdates()
+        {
+            _updateStatus = "正在检测（访问 GitHub）…";
+            try
+            {
+                _updateStatus = HwUpdater.CheckAll();
+            }
+            catch (Exception e)
+            {
+                _updateStatus = "检测异常：" + e.Message;
+            }
+
+            Repaint();
+        }
+
+        void UpgradeOneClick()
+        {
+            try
+            {
+                _updateStatus = HwUpdater.UpgradeOneClick();
+                if (HwUpdater.ModuleUpdateAvailable)
+                {
+                    EditorApplication.delayCall += () =>
+                    {
+                        if (this != null)
+                        {
+                            _updateStatus = "升级已发起：等待编辑器重载后自动完成桥源/托管段同步…";
+                        }
+                    };
+                }
+            }
+            catch (Exception e)
+            {
+                _updateStatus = "一键更新异常：" + e.Message;
+            }
+
+            Repaint();
+        }
+
+        void DrawUpdateSection()
+        {
+            EditorGUILayout.Space(4);
+            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+            {
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    GUILayout.Label("更新", ToolNameStyle);
+                    GUILayout.FlexibleSpace();
+                    if (GUILayout.Button("检测更新", GUILayout.Height(24), GUILayout.Width(100)))
+                    {
+                        CheckForUpdates();
+                    }
+
+                    if (GUILayout.Button("一键更新", GUILayout.Height(24), GUILayout.Width(100)))
+                    {
+                        UpgradeOneClick();
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(_updateStatus))
+                {
+                    EditorGUILayout.LabelField(_updateStatus, WordWrapStyle);
+                }
+            }
+        }
+
         // ---------------------------------------------------------------- GUI
 
         void OnGUI()
@@ -521,6 +597,8 @@ namespace Jlyt.HwAds.Editor
 
                 DrawHeader(platform);
 
+                GUILayout.Space(8);
+                DrawUpdateSection();
                 GUILayout.Space(10);
 
                 // --- tools ----------------------------------------------
@@ -600,7 +678,7 @@ namespace Jlyt.HwAds.Editor
         {
             EditorGUILayout.Space(4);
             EditorGUILayout.LabelField(group.title, GroupStyle);
-            foreach (var item in group.items)
+            foreach (var item in group.items.ToArray())
             {
                 DrawCheckRow(item);
             }
@@ -630,6 +708,27 @@ namespace Jlyt.HwAds.Editor
                 {
                     GUI.color = prev;
                 }
+
+                if (item.quickFix != null &&
+                    (item.state == CheckState.Missing || item.state == CheckState.Warn))
+                {
+                    GUI.color = new Color(0.35f, 0.7f, 0.95f);
+                    string label = string.IsNullOrEmpty(item.quickFixLabel) ? "修复" : item.quickFixLabel;
+                    if (GUILayout.Button(label, GUILayout.Width(64), GUILayout.Height(20)))
+                    {
+                        try
+                        {
+                            item.quickFix?.Invoke();
+                        }
+                        catch (Exception e)
+                        {
+                            _lastLog = "执行异常：" + e.Message;
+                            Debug.LogException(e);
+                        }
+                    }
+
+                    GUI.color = prev;
+                }
             }
 
             GUI.color = prev;
@@ -639,7 +738,7 @@ namespace Jlyt.HwAds.Editor
                 EditorGUILayout.LabelField("    " + item.detail, DetailStyle);
             }
 
-            if (item.state == CheckState.Missing && !string.IsNullOrEmpty(item.fix))
+            if ((item.state == CheckState.Missing || item.state == CheckState.Warn) && !string.IsNullOrEmpty(item.fix))
             {
                 EditorGUILayout.LabelField("    修复：" + item.fix, FixStyle);
             }
