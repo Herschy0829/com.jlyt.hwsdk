@@ -50,5 +50,9 @@ Shared Unity package for the HW / GameBrain monetization SDK (AppLovin MAX based
 
 1. Add dependency in `Packages/manifest.json`:
    `"com.jlyt.hwsdk": "https://github.com/Herschy0829/com.jlyt.hwsdk.git#hw-9.8.68"`
+   > Note: the repo is **private** — every machine/CI that resolves this dependency needs GitHub
+   > credentials (e.g. `git config --global credential.helper store` + a PAT, or GitHub credential
+   > manager). Package Manager caches the resolved copy under `Library/PackageCache`, so after the
+   > first successful resolve a machine can usually reopen offline.
 2. Call `HwAdsSdk.Instance.Init(config)` once at startup (see `Runtime/HwAdsSdkConfig.cs`).
 3. See `Documentation~/HwSdk接入与升级SOP.md` for full setup/upgrade checklist.
