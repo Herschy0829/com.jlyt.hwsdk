@@ -267,7 +267,74 @@ namespace Jlyt.HwAds.Editor
             return text.Substring(0, begin) + replacement + text.Substring(endAfter);
         }
 
-        public static bool SyncMainTemplate(out string log)
+                static string BaseProjectTemplatePath => Path.Combine(AndroidPluginsDir, "baseProjectTemplate.gradle");
+
+        public static string SyncBaseProjectTemplateContent(string original)
+        {
+            string block = string.Join(Environment.NewLine, HwSdkVersions.BaseClasspathBlock());
+            if (HasMarkers(original))
+            {
+                return ReplaceBetweenTokens(original, HwSdkVersions.BeginMarker, HwSdkVersions.EndMarker, block, last: true);
+            }
+
+            string[] lines = SplitLines(original);
+            int ai = -1;
+            int gi = -1;
+            for (int i = 0; i < lines.Length; i++)
+            {
+                bool cp = lines[i].Contains("classpath");
+                if (ai < 0 && cp && lines[i].Contains("applovin.quality"))
+                {
+                    ai = i;
+                }
+                else if (gi < 0 && cp && lines[i].Contains("google-services"))
+                {
+                    gi = i;
+                }
+            }
+
+            if (ai < 0 || gi < 0)
+            {
+                return null;
+            }
+
+            int ins = Math.Min(ai, gi);
+            var keptIdx = new List<int>();
+            var keptLines = new List<string>();
+            for (int i = 0; i < lines.Length; i++)
+            {
+                if (i == ai || i == gi)
+                {
+                    continue;
+                }
+
+                keptIdx.Add(i);
+                keptLines.Add(lines[i]);
+            }
+
+            int pos = 0;
+            for (; pos < keptIdx.Count; pos++)
+            {
+                if (keptIdx[pos] > ins)
+                {
+                    break;
+                }
+            }
+
+            keptLines.Insert(pos, block);
+            return JoinLines(keptLines);
+        }
+
+        public static bool SyncBaseProjectTemplate(out string log)
+        {
+            return SyncTemplateFile(BaseProjectTemplatePath, () =>
+            {
+                string original = File.ReadAllText(BaseProjectTemplatePath);
+                return SyncBaseProjectTemplateContent(original);
+            }, out log);
+        }
+
+public static bool SyncMainTemplate(out string log)
         {
             var lines = HwSdkVersions.MainDependenciesBlock().ToList();
             return SyncTemplateFile(MainTemplatePath, () =>

@@ -551,8 +551,9 @@ namespace Jlyt.HwAds.Editor
         {
             HwGradleSync.SyncMainTemplate(out string mainLog);
             HwGradleSync.SyncSettingsTemplate(out string settingsLog);
+            HwGradleSync.SyncBaseProjectTemplate(out string baseLog);
             HwNativeBridgeInstaller.InstallAll(out string bridgeLog);
-            _lastLog = mainLog + "\n" + settingsLog + "\n" + bridgeLog;
+            _lastLog = mainLog + "\n" + settingsLog + "\n" + baseLog + "\n" + bridgeLog;
             Debug.Log("[Jlyt.HwAds] " + _lastLog);
             RefreshAll();
         }

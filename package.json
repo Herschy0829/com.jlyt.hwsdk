@@ -1,6 +1,6 @@
 {
   "name": "com.jlyt.hwsdk",
-  "version": "0.9.8",
+  "version": "0.9.9",
   "displayName": "JLYT HwAds SDK",
   "description": "Shared Unity module for the HW/GameBrain monetization SDK (AppLovin MAX based). Baselines: Android hwads 9.8.68, iOS HwAds 9.8.75. Supports Unity 2022.3 LTS and Unity 6000+ (below 2022.3 unsupported). Provides a unified cross-platform C# API, per-version dependency manifests and Editor build integration.",
   "unity": "2022.3",

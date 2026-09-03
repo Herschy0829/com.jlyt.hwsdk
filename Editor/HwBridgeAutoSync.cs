@@ -88,6 +88,9 @@ namespace Jlyt.HwAds.Editor
             HwGradleSync.SyncSettingsTemplate(out string settingsLog);
             logs.AppendLine(settingsLog);
 
+            HwGradleSync.SyncBaseProjectTemplate(out string baseLog);
+            logs.AppendLine(baseLog);
+
             EditorPrefs.SetString(SyncStateKey, signature);
 
             if (upgradeRequested)

@@ -37,22 +37,22 @@ namespace Jlyt.HwAds.Editor
             "implementation 'com.applovin.mediation:fyber-adapter:8.4.5.0'",
             "implementation 'com.applovin.mediation:google-adapter:25.3.0.0'",
             "implementation 'com.applovin.mediation:google-ad-manager-adapter:25.3.0.0'",
-            "implementation 'com.applovin.mediation:facebook-adapter:6.21.0.0'",
+            "implementation 'com.applovin.mediation:facebook-adapter:6.22.0.0'",
             "implementation 'com.squareup.picasso:picasso:2.8'",
             "implementation 'androidx.recyclerview:recyclerview:1.1.0'",
             "implementation 'com.applovin.mediation:ironsource-adapter:9.4.3.0.0'",
-            "implementation 'com.applovin.mediation:moloco-adapter:4.9.0.0'",
+            "implementation 'com.applovin.mediation:moloco-adapter:4.11.0.0'",
             "implementation 'com.applovin.mediation:mintegral-adapter:17.1.61.0'",
             "implementation 'com.applovin.mediation:bytedance-adapter:8.1.0.3.0'",
-            "implementation 'com.applovin.mediation:unityads-adapter:4.18.1.0'",
+            "implementation 'com.applovin.mediation:unityads-adapter:4.20.0.0'",
             "implementation 'com.applovin.mediation:vungle-adapter:7.7.1.0'",
             "implementation 'com.applovin.mediation:inmobi-adapter:11.2.0.0'",
             "implementation 'com.applovin.mediation:bigoads-adapter:5.8.2.0'",
             "implementation 'com.hyprmx.android:HyprMX-Max:6.4.6.0'",
             "implementation 'com.hyprmx.android:HyprMX-SDK:6.4.6'",
             "implementation 'com.adsurge.sdk:adapter-for-max:1.6.0.0'",
-            "implementation 'com.adjust.sdk:adjust-android:5.7.0'",
-            "implementation 'com.adjust.sdk:adjust-android-google-lvl:5.7.0'",
+            "implementation 'com.adjust.sdk:adjust-android:5.8.0'",
+            "implementation 'com.adjust.sdk:adjust-android-google-lvl:5.8.0'",
             "implementation 'com.google.android.gms:play-services-analytics:18.0.2'",
             "implementation 'com.android.installreferrer:installreferrer:2.2'",
             "implementation 'com.android.support:multidex:1.0.3'",
@@ -92,5 +92,17 @@ namespace Jlyt.HwAds.Editor
             }
             yield return EndMarker;
         }
+        /// <summary>Plugin classpath versions written into baseProjectTemplate.gradle (upstream versioned).</summary>
+        public const string AppLovinQualityPluginClasspath = "com.applovin.quality:AppLovinQualityServiceGradlePlugin:5.12.11";
+        public const string GoogleServicesPluginClasspath = "com.google.gms:google-services:4.4.0";
+
+        public static IEnumerable<string> BaseClasspathBlock()
+        {
+            yield return BeginMarker;
+            yield return "classpath \"" + AppLovinQualityPluginClasspath + "\"";
+            yield return "classpath '" + GoogleServicesPluginClasspath + "'";
+            yield return EndMarker;
+        }
+
     }
 }

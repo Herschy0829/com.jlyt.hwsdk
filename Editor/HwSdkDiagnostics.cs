@@ -30,6 +30,17 @@ namespace Jlyt.HwAds.Editor
                 issues.Add("mainTemplate.gradle has no com.jlyt.hwsdk managed region. Run Tools/Jlyt/HwSDK/Sync Gradle Templates.");
             }
 
+            // 2ab. baseProjectTemplate managed region (plugin classpaths, versioned upstream).
+            string baseProj = SafeRead("Assets/Plugins/Android/baseProjectTemplate.gradle");
+            if (!HwGradleSync.HasMarkers(baseProj))
+            {
+                issues.Add("baseProjectTemplate.gradle has no com.jlyt.hwsdk managed region (plugin classpaths). Run Tools/Jlyt/HwSDK/Sync.");
+            }
+            else if (!baseProj.Contains(HwSdkVersions.AppLovinQualityPluginClasspath))
+            {
+                issues.Add("baseProjectTemplate.gradle AppLovin Quality plugin version is not " + HwSdkVersions.AppLovinQualityPluginClasspath + ".");
+            }
+
             // 2b. host native bridge sources installed & matching the package version.
             if (!HwNativeBridgeInstaller.HostFilesUpToDate())
             {

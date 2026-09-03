@@ -7,9 +7,17 @@
 
 ## Upstream version log (module changelog template)
 
+### 0.9.9 — 2026-09-03
+- 依赖清单按官方接入文档(9.8.68 change)修正：facebook-adapter 6.22.0.0、moloco-adapter 4.11.0.0、unityads-adapter 4.20.0.0、adjust-android/Google-lvl 5.8.0。
+- baseProjectTemplate 的插件 classpath(AppLovin Quality 5.12.11 / google-services 4.4.0)纳入模块托管段：Sync/一键更新/自动同步都会写入；诊断校验托管段与版本。
+- IsLand 模板同步更新（mainTemplate 托管段 + baseProject 托管段）。
 ### 0.9.8 — 2026-09-03
 - 修复 git 依赖编译：补提交 `Editor/HwAdmobIdWindow.cs.meta` 与 `Editor/HwAppLovinKeyWindow.cs.meta`。缺失 .meta 会使 Unity 2022.3 将这两个 Editor 源排除出程序集编译，导致 `HwSdkWindow.cs` 引用报 CS0103（git 形态新接入工程必现）。
 
+### 0.9.9 — 2026-09-03
+- 依赖清单按官方接入文档(9.8.68 change)修正：facebook-adapter 6.22.0.0、moloco-adapter 4.11.0.0、unityads-adapter 4.20.0.0、adjust-android/Google-lvl 5.8.0。
+- baseProjectTemplate 的插件 classpath(AppLovin Quality 5.12.11 / google-services 4.4.0)纳入模块托管段：Sync/一键更新/自动同步都会写入；诊断校验托管段与版本。
+- IsLand 模板同步更新（mainTemplate 托管段 + baseProject 托管段）。
 ### 0.9.8 — 2026-09-03
 - 依赖清单对齐官方 9.8.68 文档：`dependencies` 补齐 `implementation 'com.google.firebase:firebase-analytics'`（随 BOM 34.9.0，与 firebase-crashlytics 并列）；IsLand mainTemplate 托管段同步更新。
 ### 0.9.7 — 2026-09-03
