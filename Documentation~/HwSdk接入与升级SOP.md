@@ -3,6 +3,22 @@
 > 基线：Android 9.8.68 / iOS 9.8.75（上游），包版本 0.9.x。
 > 前置阅读：《HWSDK模块化分析与落地方案.md》《HWSDK模块设计规范v1.md》（在 IsLand 工程 Docs/ 下）。
 
+## 〇、Unity 版本兼容矩阵
+
+| Unity | 支持 | 说明 |
+|---|---|---|
+| 2022.3 LTS | ✅ | 本模块开发验证环境（0 error / Diagnostics / Android 导出通过） |
+| 6000.0+（Unity 6.x） | ✅ | 按兼容策略设计（跨版本稳定 API、Native 模板安装、版本清单驱动模板），首个 Unity 6 工程按下方清单核对 |
+| < 2022.3 | ❌ | 团队决策不处理（package.json `unity: 2022.3`） |
+
+**接入/升级到 Unity 6000 核对清单**（详见模块 README“Unity version compatibility”）：
+1. 包解析后运行 `Tools/Jlyt/HwSDK → Diagnostics`，头部应显示 `Editor: Unity 6xxx (supported)` 且 issues=0；
+2. 历史手写模板先跑 `Sync Android Gradle Templates + Install Native Bridges` 重新生成托管段；
+3. EDM4U 用支持 Unity 6 的版本（建议 ≥1.2.179）并跑一次 Android Resolver；
+4. 勿把旧机器 NDK/JDK/keystore 绝对路径带进 Unity 6 工程模板（诊断会提示）；
+5. iOS 重新 `Import iOS SDK Release (zip)` 并核验 Xcode 链接；
+6. 首次出包前做 Android 导出工程构建 + 真机回归（见 §三）。
+
 ## 一、新工程接入
 
 1. **加依赖**：`Packages/manifest.json`

@@ -7,6 +7,11 @@
 
 ## Upstream version log (module changelog template)
 
+### 0.9.2 — 2026-09-03
+- Unity 兼容策略明确并写入 README/SOP/Diagnostics：支持 **2022.3 LTS 与 Unity 6000+**；2022.3 以下不支持（package.json `unity: 2022.3`）。
+- Diagnostics 输出编辑器版本 + 支持矩阵（`Editor: Unity xxxx (supported / NOT SUPPORTED below Unity 2022.3)`）。
+- README 增加兼容矩阵与「升级到 Unity 6000 核对清单」。
+
 ### hw-9.8.68 / 0.9.1
 - First module baseline. Migrated from in-project integration (IsLand).
 - Unified API replaces per-platform `HwAdsBridge` (Android) / `HwAdsBridge`+`HwAdsInterface` (iOS).

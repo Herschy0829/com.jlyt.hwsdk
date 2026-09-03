@@ -64,23 +64,46 @@ namespace Jlyt.HwAds.Editor
 
         public static void Run()
         {
+            string header = BuildHeader();
             var issues = CollectIssues();
             if (issues.Count == 0)
             {
-                Debug.Log("[Jlyt.HwAds] Diagnostics OK (upstream " + HwSdkVersions.UpstreamVersion + ").");
+                Debug.Log("[Jlyt.HwAds] " + header + "\n[Jlyt.HwAds] Diagnostics OK (upstream " + HwSdkVersions.UpstreamVersion + ").");
                 EditorUtility.DisplayDialog("HWSDK Diagnostics",
-                    "All checks passed.\n\nUpstream: " + HwSdkVersions.UpstreamVersion, "OK");
+                    header + "\n\nAll checks passed.\n\nUpstream: " + HwSdkVersions.UpstreamVersion, "OK");
                 return;
             }
 
             var sb = new StringBuilder();
+            sb.AppendLine(header);
             for (int i = 0; i < issues.Count; i++)
             {
                 sb.AppendLine($"{i + 1}. {issues[i]}");
             }
 
-            Debug.LogWarning("[Jlyt.HwAds] Diagnostics issues:\n" + sb);
+            Debug.LogWarning("[Jlyt.HwAds] " + sb);
             EditorUtility.DisplayDialog("HWSDK Diagnostics", sb.ToString(), "OK");
+        }
+
+        /// <summary>
+        /// Compatibility note shown by the diagnostics: supported Unity versions are 2022.3 LTS and
+        /// Unity 6000 (6.x)+. Versions below 2022.3 are NOT supported by this module (team decision).
+        /// </summary>
+        public static string BuildHeader()
+        {
+            string version = UnityEngine.Application.unityVersion;
+            int major = 0;
+            string[] parts = (version ?? "").Split('.');
+            if (parts.Length > 0)
+            {
+                int.TryParse(parts[0], out major);
+            }
+
+            bool supported = major >= 2022; // 2022.3 LTS + Unity 6000+; < 2022 not supported.
+            string matrix = supported
+                ? "supported - Unity 2022.3 LTS & Unity 6000+"
+                : "NOT SUPPORTED (below Unity 2022.3)";
+            return $"Editor: Unity {version} | {matrix}";
         }
 
         static string SafeRead(string path)
