@@ -89,7 +89,8 @@ namespace Jlyt.HwAds
             _platform.ShowReward(placement, completed);
         }
 
-        public void ShowReward(string placement, Action<HwAdsShowResult> completed)
+        /// <summary>Variant exposing a structured result; distinct name keeps lambda calls on the bool overload unambiguous.</summary>
+        public void ShowRewardWithResult(string placement, Action<HwAdsShowResult> completed)
         {
             if (completed == null)
             {
