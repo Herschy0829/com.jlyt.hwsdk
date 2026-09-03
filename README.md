@@ -11,9 +11,11 @@ Shared Unity package for the HW / GameBrain monetization SDK (AppLovin MAX based
 ## Layout
 
 - `Runtime/` — unified cross-platform C# API (`Jlyt.HwAds`), self-contained (no dependency on project singletons/helpers).
-- `Plugins/Android/` — `hwads_<version>.jar` + `HWAdsBridge.java`.
-- `Plugins/iOS/` — `HwAdsInterface.h/.m` (native binary NOT stored in git; import with Editor tool, see `HwIosFrameworkImporter`).
-- `Editor/` — per-version dependency manifest, gradle template writer/diagnostics, Android export patcher, iOS framework importer, one-click project setup.
+- `Plugins/Android/` — `hwads_<version>.jar` (versioned here, included by Unity natively).
+- `Native/` — authoritative native bridge sources installed into the host project by the Editor tool:
+  `Android/HWAdsBridge.java` -> `Assets/Plugins/Android/`, `iOS/HwAdsInterface.{h,m}` -> `Assets/Plugins/iOS/`.
+- `Editor/` — per-version dependency manifest, gradle template writer/diagnostics, native bridge installer,
+  Android export patcher, iOS framework importer, one-click project setup menus.
 
 ## Per-project configuration (never commit into this package)
 

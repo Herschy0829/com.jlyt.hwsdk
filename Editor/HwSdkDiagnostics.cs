@@ -30,10 +30,10 @@ namespace Jlyt.HwAds.Editor
                 issues.Add("mainTemplate.gradle has no com.jlyt.hwsdk managed region. Run Tools/Jlyt/HwSDK/Sync Gradle Templates.");
             }
 
-            // 2b. host Android Java bridge installed & matching the package version.
-            if (!HwNativeBridgeInstaller.HostBridgeUpToDate())
+            // 2b. host native bridge sources installed & matching the package version.
+            if (!HwNativeBridgeInstaller.HostFilesUpToDate())
             {
-                issues.Add("Assets/Plugins/Android/HWAdsBridge.java is missing or out of date. Run Tools/Jlyt/HwSDK/Install Android Java Bridge.");
+                issues.Add("Native bridge sources (Assets/Plugins/Android/HWAdsBridge.java, Assets/Plugins/iOS/HwAdsInterface.h/.m) are missing or out of date. Run Tools/Jlyt/HwSDK/Sync Android Gradle Templates + Install Native Bridges.");
             }
 
             // 3. minSdk.

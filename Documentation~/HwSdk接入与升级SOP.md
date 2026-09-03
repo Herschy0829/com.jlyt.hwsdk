@@ -44,9 +44,9 @@
    ```
 
 5. **菜单动作**：`Tools/Jlyt/HwSDK/`
-   - `Sync Android Gradle Templates`：把版本清单写入 mainTemplate/settingsTemplate 的托管段；
-   - `Diagnostics / Validate Project`：检查 jar 重复、托管段、minSdk、配置件；
-   - `Import iOS SDK Release (zip)…`：把官方 iOS zip 导入 `Assets/Plugins/iOS/HwAdsNative/V9.8.75`。
+   - `Sync Android Gradle Templates + Install Native Bridges`：把版本清单写入 mainTemplate/settingsTemplate 的托管段，并把 Java/ObjC 桥源文件安装到 `Assets/Plugins/Android|iOS`（哈希校验，幂等）；
+   - `Diagnostics / Validate Project`：检查 jar 重复、托管段、minSdk（≥24）、配置件、桥源文件是否就位；
+   - `Import iOS SDK Release (zip)…`：把官方 iOS zip 导入 `Assets/Plugins/iOS/HwAdsNative/V9.8.75`（仅 framework 二进制，仓库不存）。
    iOS 框架二进制统一存放点待定（共享盘/对象存储 + sha256），届时把 URL 写进 importer。
 
 ## 二、升级上游 SDK
