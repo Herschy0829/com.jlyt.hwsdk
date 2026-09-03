@@ -59,6 +59,7 @@ namespace Jlyt.HwAds.Editor
         string _lastLog;
         string _updateStatus;
         bool _checkedOnce;
+        readonly Dictionary<string, bool> _groupFold = new Dictionary<string, bool>();
 
         const string RepoUrl = "https://github.com/Herschy0829/com.jlyt.hwsdk";
         const string RepoTag = "#hw-9.8.68";
@@ -117,6 +118,15 @@ namespace Jlyt.HwAds.Editor
             }
 
             FillDocsTools();
+
+            foreach (var g in _groups)
+            {
+                if (!_groupFold.ContainsKey(g.title))
+                {
+                    _groupFold[g.title] = true; // expand by default
+                }
+            }
+
             Repaint();
         }
 
@@ -596,43 +606,102 @@ namespace Jlyt.HwAds.Editor
                 _scroll = scroll.scrollPosition;
 
                 DrawHeader(platform);
+                GUILayout.Space(6);
 
+                DrawUpdateCard();
                 GUILayout.Space(8);
-                DrawUpdateSection();
+
+                DrawToolsSection(platform);
                 GUILayout.Space(10);
 
-                // --- tools ----------------------------------------------
-                DrawSectionTitle("工具（当前平台：" + PlatformLabel(platform) + "）");
-                foreach (var tool in _tools.ToArray())
+                DrawDetectionSection();
+            }
+        }
+
+        void DrawHeader(PlatformMode platform)
+        {
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                EditorGUILayout.LabelField("JLYTSDK · HW/GameBrain 变现 SDK", TitleStyle, GUILayout.ExpandWidth(true));
+                DrawPlatformChip(platform);
+            }
+
+            EditorGUILayout.LabelField(
+                "模块 com.jlyt.hwsdk · 基线 Android " + HwSdkVersions.UpstreamVersion +
+                " / iOS " + HwIosFrameworkImporter.ExpectedIosVersion +
+                " · 文档点击即打开浏览器", SubTitleStyle);
+        }
+
+        void DrawPlatformChip(PlatformMode platform)
+        {
+            string text;
+            Color c;
+            switch (platform)
+            {
+                case PlatformMode.Android: text = "● Android"; c = new Color(0.45f, 0.8f, 0.4f); break;
+                case PlatformMode.Ios: text = "● iOS"; c = new Color(0.6f, 0.75f, 0.95f); break;
+                default: text = "○ 未选择"; c = Color.gray; break;
+            }
+
+            var prev = GUI.color;
+            GUI.color = c;
+            EditorGUILayout.LabelField(text, StatusStyle, GUILayout.Width(96));
+            GUI.color = prev;
+        }
+
+        void DrawUpdateCard()
+        {
+            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+            {
+                using (new EditorGUILayout.HorizontalScope())
                 {
-                    DrawTool(tool);
+                    GUILayout.Label("更新", ToolNameStyle, GUILayout.Width(48));
+                    if (GUILayout.Button("检测更新", GUILayout.Height(24), GUILayout.Width(120)))
+                    {
+                        CheckForUpdates();
+                    }
+
+                    if (GUILayout.Button("一键更新", GUILayout.Height(24), GUILayout.Width(120)))
+                    {
+                        UpgradeOneClick();
+                    }
+
+                    GUILayout.FlexibleSpace();
+                    EditorGUILayout.LabelField(
+                        HwUpdater.ModuleUpdateAvailable ? "发现新版本" : "跟随标签 hw-9.8.68",
+                        HwUpdater.ModuleUpdateAvailable ? WarnStyle : DetailStyle,
+                        GUILayout.Width(220));
                 }
 
-                GUILayout.Space(12);
-
-                // --- detection ------------------------------------------
-                DrawSectionTitle("SDK 所需内容检测（打开窗口时自动检测）");
-                if (GUILayout.Button("重新检测", GUILayout.Height(28)))
+                if (!string.IsNullOrEmpty(_updateStatus))
                 {
-                    RefreshAll();
+                    EditorGUILayout.LabelField(_updateStatus, WordWrapStyle);
                 }
+            }
+        }
 
-                GUILayout.Space(6);
-                int missing = _groups.Sum(g => g.items.Count(i => i.state == CheckState.Missing));
-                int warn = _groups.Sum(g => g.items.Count(i => i.state == CheckState.Warn));
-                DrawStatusSummary(missing, warn);
+        void DrawToolsSection(PlatformMode platform)
+        {
+            DrawSectionTitle("工具（仅显示当前平台 " + PlatformLabel(platform) + " 的可用项）");
+            if (_tools.Count == 0)
+            {
+                EditorGUILayout.HelpBox("当前平台没有可用工具，请先切换构建平台。", MessageType.Info);
+                return;
+            }
 
-                GUILayout.Space(6);
-                foreach (var group in _groups.ToArray())
+            for (int i = 0; i < _tools.Count; i += 2)
+            {
+                using (new EditorGUILayout.HorizontalScope())
                 {
-                    DrawGroup(group);
-                }
-
-                if (!string.IsNullOrEmpty(_lastLog))
-                {
-                    GUILayout.Space(10);
-                    DrawSectionTitle("最近操作结果");
-                    EditorGUILayout.HelpBox(_lastLog, MessageType.Info);
+                    DrawToolCard(_tools[i]);
+                    if (i + 1 < _tools.Count)
+                    {
+                        DrawToolCard(_tools[i + 1]);
+                    }
+                    else
+                    {
+                        GUILayout.FlexibleSpace();
+                    }
                 }
             }
         }
@@ -647,111 +716,20 @@ namespace Jlyt.HwAds.Editor
             }
         }
 
-        void DrawHeader(PlatformMode platform)
-        {
-            EditorGUILayout.LabelField("JLYTSDK · HW/GameBrain 变现 SDK 管理", TitleStyle);
-            GUILayout.Space(2);
-            EditorGUILayout.LabelField(
-                "模块 com.jlyt.hwsdk · 上游基线 Android " + HwSdkVersions.UpstreamVersion + " / iOS " + HwIosFrameworkImporter.ExpectedIosVersion,
-                SubTitleStyle);
-        }
-
         void DrawSectionTitle(string text)
         {
+            EditorGUILayout.Space(6);
             EditorGUILayout.LabelField(text, SectionStyle);
             GUILayout.Space(2);
         }
 
-        void DrawStatusSummary(int missing, int warn)
+        void DrawToolCard(ToolEntry tool)
         {
-            string text = missing == 0 && warn == 0
-                ? "检测结果：全部通过 ✔"
-                : $"检测结果：{missing} 项缺失（红色），{warn} 项建议（黄色）";
-            var color = missing == 0 ? Color.green : Color.yellow;
-            var prev = GUI.color;
-            GUI.color = color;
-            EditorGUILayout.LabelField(text, StatusStyle);
-            GUI.color = prev;
-        }
-
-        void DrawGroup(CheckGroup group)
-        {
-            EditorGUILayout.Space(4);
-            EditorGUILayout.LabelField(group.title, GroupStyle);
-            foreach (var item in group.items.ToArray())
-            {
-                DrawCheckRow(item);
-            }
-        }
-
-        void DrawCheckRow(CheckItem item)
-        {
-            var prev = GUI.color;
-            using (new EditorGUILayout.HorizontalScope(GUILayout.ExpandWidth(true)))
-            {
-                string icon;
-                Color c;
-                switch (item.state)
-                {
-                    case CheckState.Ok: icon = "✔"; c = new Color(0.45f, 0.85f, 0.4f); break;
-                    case CheckState.Warn: icon = "⚠"; c = Color.yellow; break;
-                    case CheckState.Missing: icon = "✘"; c = new Color(1f, 0.45f, 0.4f); break;
-                    default: icon = "ℹ"; c = new Color(0.7f, 0.75f, 0.9f); break;
-                }
-
-                GUI.color = c;
-                GUILayout.Label(icon, IconStyle, GUILayout.Width(22));
-                GUI.color = item.state == CheckState.Missing ? Color.red : prev;
-
-                GUILayout.Label(item.name, RowLabelStyle);
-                if (item.state == CheckState.Missing)
-                {
-                    GUI.color = prev;
-                }
-
-                if (item.quickFix != null &&
-                    (item.state == CheckState.Missing || item.state == CheckState.Warn))
-                {
-                    GUI.color = new Color(0.35f, 0.7f, 0.95f);
-                    string label = string.IsNullOrEmpty(item.quickFixLabel) ? "修复" : item.quickFixLabel;
-                    if (GUILayout.Button(label, GUILayout.Width(64), GUILayout.Height(20)))
-                    {
-                        try
-                        {
-                            item.quickFix?.Invoke();
-                        }
-                        catch (Exception e)
-                        {
-                            _lastLog = "执行异常：" + e.Message;
-                            Debug.LogException(e);
-                        }
-                    }
-
-                    GUI.color = prev;
-                }
-            }
-
-            GUI.color = prev;
-            if (!string.IsNullOrEmpty(item.detail))
-            {
-                var detailColor = item.state == CheckState.Missing ? new Color(1f, 0.55f, 0.5f) : new Color(0.75f, 0.75f, 0.75f);
-                EditorGUILayout.LabelField("    " + item.detail, DetailStyle);
-            }
-
-            if ((item.state == CheckState.Missing || item.state == CheckState.Warn) && !string.IsNullOrEmpty(item.fix))
-            {
-                EditorGUILayout.LabelField("    修复：" + item.fix, FixStyle);
-            }
-        }
-
-        void DrawTool(ToolEntry tool)
-        {
-            EditorGUILayout.Space(4);
-            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox, GUILayout.ExpandWidth(true)))
             {
                 GUILayout.Label(tool.name, ToolNameStyle);
                 EditorGUILayout.LabelField(tool.description, WordWrapStyle);
-                if (GUILayout.Button("执行：" + tool.name, GUILayout.Height(26)))
+                if (GUILayout.Button("执行", GUILayout.Height(24)))
                 {
                     try
                     {
@@ -766,10 +744,179 @@ namespace Jlyt.HwAds.Editor
             }
         }
 
-        // ---------------------------------------------------------------- styles
+        void DrawDetectionSection()
+        {
+            DrawSectionTitle("SDK 所需内容检测（打开窗口自动检测）");
 
-        static GUIStyle _title, _subtitle, _section, _group, _row, _detail, _fix, _icon, _toolName, _word, _status;
+            int missing = 0;
+            int warn = 0;
+            int ok = 0;
+            foreach (var g in _groups)
+            {
+                missing += g.items.Count(i => i.state == CheckState.Missing);
+                warn += g.items.Count(i => i.state == CheckState.Warn);
+                ok += g.items.Count(i => i.state == CheckState.Ok);
+            }
 
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                EditorGUILayout.LabelField(BuildSummaryText(missing, warn, ok), StatusStyle, GUILayout.ExpandWidth(true));
+                if (GUILayout.Button("重新检测", GUILayout.Width(110), GUILayout.Height(24)))
+                {
+                    RefreshAll();
+                }
+            }
+
+            GUILayout.Space(4);
+            foreach (var group in _groups.ToArray())
+            {
+                DrawGroup(group);
+            }
+
+            if (!string.IsNullOrEmpty(_lastLog))
+            {
+                GUILayout.Space(8);
+                EditorGUILayout.HelpBox("最近操作：" + _lastLog, MessageType.Info);
+            }
+        }
+
+        static string BuildSummaryText(int missing, int warn, int ok)
+        {
+            int total = missing + warn + ok;
+            string parts = "";
+            if (ok > 0) parts += $" 正常 {ok}";
+            if (warn > 0) parts += $"  建议 {warn}";
+            if (missing > 0) parts += $"  缺失 {missing}";
+            return "检测结果：" + (missing == 0 && warn == 0 ? "全部通过 ✔" : parts.TrimStart());
+        }
+
+        void DrawGroup(CheckGroup group)
+        {
+            bool expanded;
+            _groupFold.TryGetValue(group.title, out expanded);
+            bool next = EditorGUILayout.Foldout(expanded, group.title, true, GroupFoldStyle);
+            if (next != expanded)
+            {
+                _groupFold[group.title] = next;
+                Repaint();
+            }
+
+            if (!expanded)
+            {
+                return;
+            }
+
+            foreach (var item in group.items.ToArray())
+            {
+                DrawCheckRow(item);
+            }
+        }
+
+        void DrawCheckRow(CheckItem item)
+        {
+            var prev = GUI.color;
+            using (new EditorGUILayout.HorizontalScope(GUILayout.ExpandWidth(true)))
+            {
+                GUI.color = StateColor(item.state);
+                GUILayout.Label(StateIcon(item.state), IconStyle, GUILayout.Width(20));
+                GUI.color = prev;
+
+                string tip = item.fix ?? item.detail;
+                GUILayout.Label(item.name, RowLabelStyle, GUILayout.ExpandWidth(true));
+
+                if (item.quickFix != null &&
+                    (item.state == CheckState.Missing || item.state == CheckState.Warn))
+                {
+                    GUI.color = new Color(0.35f, 0.7f, 0.95f);
+                    if (GUILayout.Button(string.IsNullOrEmpty(item.quickFixLabel) ? "修复" : item.quickFixLabel,
+                            GUILayout.Width(58), GUILayout.Height(20)))
+                    {
+                        try
+                        {
+                            item.quickFix?.Invoke();
+                        }
+                        catch (Exception e)
+                        {
+                            _lastLog = "执行异常：" + e.Message;
+                            Debug.LogException(e);
+                        }
+                    }
+
+                    GUI.color = prev;
+                }
+
+                EditorGUILayout.LabelField(StateText(item.state), StateTextStyle,
+                    GUILayout.Width(110), GUILayout.ExpandWidth(false));
+            }
+
+            GUI.color = prev;
+            if (item.state == CheckState.Warn || item.state == CheckState.Missing)
+            {
+                EditorGUILayout.LabelField("    " + (item.state == CheckState.Missing ? "缺失：" : "注意：") +
+                    (string.IsNullOrEmpty(item.detail) ? item.fix : item.detail), DetailStyle);
+                if (!string.IsNullOrEmpty(item.fix))
+                {
+                    EditorGUILayout.LabelField("    处理：" + item.fix, FixStyle);
+                }
+            }
+        }
+
+        // ---------------------------------------------------------------- state helpers
+
+        static string StateText(CheckState s)
+        {
+            switch (s)
+            {
+                case CheckState.Ok: return "正常";
+                case CheckState.Warn: return "建议处理";
+                case CheckState.Missing: return "缺失";
+                default: return "";
+            }
+        }
+
+        static string StateIcon(CheckState s)
+        {
+            switch (s)
+            {
+                case CheckState.Ok: return "✔";
+                case CheckState.Warn: return "⚠";
+                case CheckState.Missing: return "✘";
+                default: return "ℹ";
+            }
+        }
+
+        static Color StateColor(CheckState s)
+        {
+            switch (s)
+            {
+                case CheckState.Ok: return new Color(0.45f, 0.85f, 0.4f);
+                case CheckState.Warn: return Color.yellow;
+                case CheckState.Missing: return new Color(1f, 0.45f, 0.4f);
+                default: return new Color(0.7f, 0.75f, 0.9f);
+            }
+        }
+
+        // ---------------------------------------------------------------- misc
+
+        static GUIStyle _stateText, _groupFoldStyle, _warn;
+
+        static GUIStyle StateTextStyle => _stateText ?? (_stateText = new GUIStyle(EditorStyles.miniLabel)
+        {
+            alignment = TextAnchor.MiddleRight,
+            fontSize = 10,
+        });
+
+        static GUIStyle GroupFoldStyle => _groupFoldStyle ?? (_groupFoldStyle = new GUIStyle(EditorStyles.foldout)
+        {
+            fontStyle = FontStyle.Bold,
+        });
+
+        static GUIStyle WarnStyle => _warn ?? (_warn = new GUIStyle(EditorStyles.boldLabel)
+        {
+            normal = { textColor = Color.yellow },
+        });
+
+static GUIStyle _title,_subtitle,_section,_group,_row,_detail,_fix,_icon,_toolName,_word,_status;
         static GUIStyle TitleStyle => _title ?? (_title = new GUIStyle(EditorStyles.largeLabel)
         {
             fontSize = 18, fontStyle = FontStyle.Bold, richText = true,

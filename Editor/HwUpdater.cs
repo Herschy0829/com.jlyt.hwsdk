@@ -39,7 +39,13 @@ namespace Jlyt.HwAds.Editor
         public static string CheckAll()
         {
             var sb = new StringBuilder();
+            ModuleUpdateAvailable = false;
+            UpstreamAndroidUpdateAvailable = false;
+            UpstreamIosUpdateAvailable = false;
+
             string local = DescribeLocal();
+            bool gitMode = IsGitConsumed();
+            string localCommit = GetLocalGitCommit();
 
             string remoteCommit = null;
             string remoteErr = null;
@@ -49,13 +55,22 @@ namespace Jlyt.HwAds.Editor
             {
                 sb.AppendLine("模块远端：检查失败 - " + remoteErr);
             }
-            else
+            else if (!gitMode)
             {
-                ModuleUpdateAvailable = !string.IsNullOrEmpty(local) && !string.IsNullOrEmpty(remoteCommit) &&
-                                        !local.Equals(remoteCommit, StringComparison.OrdinalIgnoreCase);
                 sb.AppendLine("本地模块：" + local);
                 sb.AppendLine("远端标签 " + TagRef + "：" + Short(remoteCommit) +
-                              (ModuleUpdateAvailable ? "  → 有更新，可一键更新" : "  → 已是最新"));
+                              "（当前为 file:/Local 开发引用：改用 git 引用后即可检测/一键更新）");
+            }
+            else if (IsSameSha(localCommit, remoteCommit))
+            {
+                sb.AppendLine("本地模块：" + local);
+                sb.AppendLine("远端标签 " + TagRef + "：" + Short(remoteCommit) + "  → 已是最新");
+            }
+            else
+            {
+                ModuleUpdateAvailable = true;
+                sb.AppendLine("本地模块：" + local);
+                sb.AppendLine("远端标签 " + TagRef + "：" + Short(remoteCommit) + "  → 有更新，可一键更新");
             }
 
             string androidLatest = null;
@@ -84,7 +99,12 @@ namespace Jlyt.HwAds.Editor
 
         public static string UpgradeOneClick()
         {
-            string local = DescribeLocal();
+            if (!IsGitConsumed())
+            {
+                LastCheckLog = "当前为 file:/Local 开发引用：一键更新仅对 git 引用生效（发布后改为 git URL）";
+                return LastCheckLog;
+            }
+
             string remoteCommit;
             string remoteErr;
             GetRemoteTagCommit(out remoteCommit, out remoteErr);
@@ -93,7 +113,7 @@ namespace Jlyt.HwAds.Editor
                 return "无法获取远端标签：" + remoteErr;
             }
 
-            if (!string.IsNullOrEmpty(local) && local.Equals(remoteCommit, StringComparison.OrdinalIgnoreCase))
+            if (IsSameSha(GetLocalGitCommit(), remoteCommit))
             {
                 LastCheckLog = "模块已是最新（" + Short(remoteCommit) + "）。";
                 return LastCheckLog;
@@ -129,7 +149,7 @@ namespace Jlyt.HwAds.Editor
             // 2) request the upgrade; auto-sync runs on the next domain load after Resolve.
             HwBridgeAutoSync.RequestUpgrade(remoteCommit);
             UnityEditor.PackageManager.Client.Resolve();
-            LastCheckLog = "已发起升级 " + Short(local) + " → " + Short(remoteCommit) +
+            LastCheckLog = "已发起升级 " + Short(GetLocalGitCommit()) + " → " + Short(remoteCommit) +
                            "。编辑器会自动重新解析并重写桥源/托管段，完成后无需其它操作。";
             return LastCheckLog;
         }
@@ -219,9 +239,35 @@ namespace Jlyt.HwAds.Editor
 
         // ------------------------------------------------------------ helpers
 
+        static UnityEditor.PackageManager.PackageInfo CurrentPackage()
+        {
+            return UnityEditor.PackageManager.PackageInfo.FindForAssembly(typeof(HwUpdater).Assembly);
+        }
+
+        static bool IsGitConsumed()
+        {
+            var info = CurrentPackage();
+            return info != null && info.source == UnityEditor.PackageManager.PackageSource.Git;
+        }
+
+        static string GetLocalGitCommit()
+        {
+            var info = CurrentPackage();
+            if (info == null || info.source != UnityEditor.PackageManager.PackageSource.Git ||
+                string.IsNullOrEmpty(info.resolvedPath))
+            {
+                return null;
+            }
+
+            int at = info.resolvedPath.LastIndexOf('@');
+            return at >= 0 && at < info.resolvedPath.Length - 1
+                ? info.resolvedPath.Substring(at + 1)
+                : null;
+        }
+
         static string DescribeLocal()
         {
-            var info = UnityEditor.PackageManager.PackageInfo.FindForAssembly(typeof(HwUpdater).Assembly);
+            var info = CurrentPackage();
             if (info == null || string.IsNullOrEmpty(info.resolvedPath))
             {
                 return "(未解析)";
@@ -229,13 +275,36 @@ namespace Jlyt.HwAds.Editor
 
             if (info.source == UnityEditor.PackageManager.PackageSource.Git)
             {
-                int at = info.resolvedPath.LastIndexOf('@');
-                return at >= 0 && at < info.resolvedPath.Length - 1
-                    ? "git " + Short(info.resolvedPath.Substring(at + 1))
-                    : "git " + info.version;
+                string commit = GetLocalGitCommit();
+                return commit != null ? "git " + Short(commit) : "git v" + info.version;
             }
 
             return info.source + " v" + info.version;
+        }
+
+        /// <summary>
+        /// Compares two commit identifiers regardless of length (UPM caches use short hashes,
+        /// the GitHub API returns the full 40-char sha).
+        /// </summary>
+        static bool IsSameSha(string a, string b)
+        {
+            if (string.IsNullOrEmpty(a) || string.IsNullOrEmpty(b))
+            {
+                return false;
+            }
+
+            if (a.Equals(b, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+
+            int prefix = Math.Min(a.Length, b.Length);
+            if (prefix < 8)
+            {
+                return false;
+            }
+
+            return string.Compare(a, 0, b, 0, 8, StringComparison.OrdinalIgnoreCase) == 0;
         }
 
         static string Short(string sha)
