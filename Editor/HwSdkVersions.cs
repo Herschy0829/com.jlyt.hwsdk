@@ -21,6 +21,7 @@ namespace Jlyt.HwAds.Editor
         public const string EndMarker = "// ==== com.jlyt.hwsdk managed end ====";
         public const string LegacyBegin = "//hwads need add";
         public const string LegacyEnd = "//hwads need add end";
+        public const string LegacyEndAlt = "//end";
 
         /// <summary>Lines injected inside the dependencies {} block of mainTemplate.gradle.</summary>
         public static readonly string[] MainDependencyLines =
@@ -74,6 +75,17 @@ namespace Jlyt.HwAds.Editor
         {
             yield return BeginMarker;
             foreach (var line in MainDependencyLines)
+            {
+                yield return line;
+            }
+            yield return EndMarker;
+        }
+
+        /// <summary>Marker-wrapped canonical maven repository block for settingsTemplate.gradle.</summary>
+        public static IEnumerable<string> SettingsBlockLines()
+        {
+            yield return BeginMarker;
+            foreach (var line in RepositoryLines)
             {
                 yield return line;
             }
