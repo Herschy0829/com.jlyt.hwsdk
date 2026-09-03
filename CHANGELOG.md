@@ -7,6 +7,10 @@
 
 ## Upstream version log (module changelog template)
 
+### 0.9.7 — 2026-09-03
+- 新增 Android 工具“设置 AppLovin Key”：把每工程自己的 Key 写入 launcherTemplate.gradle 的 applovin{apiKey}（显示时脱敏）。
+- 检测新增“launcherTemplate · AppLovin Key（每工程）”行：读取/校验/脱敏展示，行内可直接“设置”。
+
 ### 0.9.6 — 2026-09-03
 - 新增 Android 工具“设置 AdMob / Ad Manager App ID”：把每工程自己的 `ca-app-pub-…~…` 写入 `AndroidManifest.xml` 的 `com.google.android.gms.ads.APPLICATION_ID`。
 - 检测新增“AndroidManifest · AdMob APP_ID（每工程）”行：显示当前值并校验格式，行内可直接“设置”。

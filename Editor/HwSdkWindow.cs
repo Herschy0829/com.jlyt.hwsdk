@@ -286,6 +286,21 @@ namespace Jlyt.HwAds.Editor
                 quickFix = HwAdmobIdWindow.Open,
             });
 
+            // Per-project AppLovin SDK Key (launcherTemplate.gradle, applovin { apiKey }).
+            string alKey = HwAppLovinKeyWindow.ReadCurrentValue();
+            bool alOk = !string.IsNullOrEmpty(alKey) && !alKey.Contains("...") && alKey.Length > 16;
+            g.items.Add(new CheckItem
+            {
+                name = "launcherTemplate · AppLovin Key（每工程）",
+                state = alOk ? CheckState.Ok : CheckState.Warn,
+                detail = alOk ? "当前值：" + HwAppLovinKeyWindow.Masked(alKey)
+                       : string.IsNullOrEmpty(alKey) ? "未设置（applovin { apiKey } 缺失）"
+                       : "当前值：" + HwAppLovinKeyWindow.Masked(alKey) + "（过短或含占位符）",
+                fix = "用工具“设置 AppLovin Key”填入本项目自己的 Key（AppLovin MAX 后台）",
+                quickFixLabel = "设置",
+                quickFix = HwAppLovinKeyWindow.Open,
+            });
+
             return g;
         }
 
@@ -475,6 +490,12 @@ namespace Jlyt.HwAds.Editor
                 name = "同步 Android Gradle 模板 + 安装桥源",
                 description = "把模块版本清单(依赖/仓库托管段)重新写入 mainTemplate/settingsTemplate，并把 HWAdsBridge.java 安装到 Assets/Plugins/Android。模块升级后必须执行。",
                 execute = RunSync,
+            });
+            _tools.Add(new ToolEntry
+            {
+                name = "设置 AppLovin Key",
+                description = "打开小窗口：把每工程自己的 AppLovin SDK Key 写入 launcherTemplate.gradle 的 applovin { apiKey \"…\" }。",
+                execute = HwAppLovinKeyWindow.Open,
             });
             _tools.Add(new ToolEntry
             {
