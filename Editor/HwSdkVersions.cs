@@ -58,6 +58,7 @@ namespace Jlyt.HwAds.Editor
             "implementation 'com.android.support:multidex:1.0.3'",
             "implementation platform('com.google.firebase:firebase-bom:34.9.0')",
             "implementation 'com.google.firebase:firebase-crashlytics'",
+            "implementation 'com.google.firebase:firebase-analytics'",
         };
 
         /// <summary>Lines injected inside every maven repositories {} block that carries the legacy hwads markers.</summary>
