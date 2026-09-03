@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using System.Security.Cryptography;
 using UnityEditor;
 using UnityEngine;
 
@@ -84,11 +83,9 @@ namespace Jlyt.HwAds.Editor
 
         public static bool HostFilesUpToDate()
         {
-            foreach (var (packageRel, hostRel) in Entries)
+            for (int i = 0; i < Entries.Length; i++)
             {
-                string src = ResolvePackageFile(packageRel);
-                if (string.IsNullOrEmpty(src) || !File.Exists(src) ||
-                    !File.Exists(hostRel) || !FilesEqual(src, hostRel))
+                if (!EntryUpToDate(i))
                 {
                     return false;
                 }
@@ -97,22 +94,44 @@ namespace Jlyt.HwAds.Editor
             return true;
         }
 
+        /// <summary>Android scope: only Assets/Plugins/Android/HWAdsBridge.java matters.</summary>
+        public static bool AndroidBridgeUpToDate() => EntryUpToDate(0);
+
+        /// <summary>iOS scope: only Assets/Plugins/iOS/HwAdsInterface.{h,m} matter.</summary>
+        public static bool IosBridgeUpToDate() => EntryUpToDate(1) && EntryUpToDate(2);
+
+        static bool EntryUpToDate(int index)
+        {
+            var (packageRel, hostRel) = Entries[index];
+            string src = ResolvePackageFile(packageRel);
+            return !string.IsNullOrEmpty(src) && File.Exists(src) &&
+                   File.Exists(hostRel) && FilesEqual(src, hostRel);
+        }
+
+        /// <summary>
+        /// Content comparison, insensitive to line endings (CRLF vs LF) and a UTF-8 BOM, so hosts are
+        /// not falsely flagged when the git package is checked out with different EOL settings.
+        /// </summary>
         static bool FilesEqual(string a, string b)
         {
             try
             {
-                using (var s1 = File.OpenRead(a))
-                using (var s2 = File.OpenRead(b))
-                using (var sha = SHA1.Create())
-                {
-                    return Convert.ToBase64String(sha.ComputeHash(s1)) ==
-                           Convert.ToBase64String(sha.ComputeHash(s2));
-                }
+                return Normalize(File.ReadAllText(a)) == Normalize(File.ReadAllText(b));
             }
             catch (Exception)
             {
                 return false;
             }
+        }
+
+        static string Normalize(string text)
+        {
+            if (text.Length > 0 && text[0] == '\uFEFF')
+            {
+                text = text.Substring(1);
+            }
+
+            return text.Replace("\r\n", "\n").Replace('\r', '\n');
         }
 
         static string ResolvePackageFile(string relativePath)

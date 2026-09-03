@@ -162,9 +162,14 @@ namespace Jlyt.HwAds.Editor
                        : "当前构建平台非 Android/iOS（请先切换构建目标）",
             });
 
-            // Map the shared diagnostics onto per-item rows.
+            // Map the shared diagnostics onto per-item rows (bridge rows are handled per-platform below).
             foreach (var issue in HwSdkDiagnostics.CollectIssues())
             {
+                if (issue.Contains("Native bridge sources"))
+                {
+                    continue;
+                }
+
                 g.items.Add(new CheckItem
                 {
                     name = "诊断项",
@@ -182,7 +187,8 @@ namespace Jlyt.HwAds.Editor
             var g = new CheckGroup { title = "Android · SDK 所需内容检测" };
             bool markersMain = SafeRead("Assets/Plugins/Android/mainTemplate.gradle").Contains(HwSdkVersions.BeginMarker);
             bool markersSettings = SafeRead("Assets/Plugins/Android/settingsTemplate.gradle").Contains(HwSdkVersions.BeginMarker);
-            bool javaOk = File.Exists("Assets/Plugins/Android/HWAdsBridge.java");
+            bool javaExists = File.Exists("Assets/Plugins/Android/HWAdsBridge.java");
+            bool javaOk = javaExists && HwNativeBridgeInstaller.AndroidBridgeUpToDate();
             bool minSdkOk = PlayerSettings.Android.minSdkVersion == AndroidSdkVersions.AndroidApiLevelAuto ||
                             (int)PlayerSettings.Android.minSdkVersion >= HwSdkVersions.MinSdkVersion;
 
@@ -203,9 +209,11 @@ namespace Jlyt.HwAds.Editor
             g.items.Add(new CheckItem
             {
                 name = "Java 桥源 HWAdsBridge.java",
-                state = javaOk ? CheckState.Ok : CheckState.Missing,
-                detail = javaOk ? "位于 Assets/Plugins/Android" : "未安装",
-                fix = "运行工具“同步 Android Gradle 模板 + 安装桥源”",
+                state = !javaExists ? CheckState.Missing : (javaOk ? CheckState.Ok : CheckState.Warn),
+                detail = !javaExists ? "未安装到 Assets/Plugins/Android"
+                       : javaOk ? "已安装且与模块版本一致"
+                       : "文件存在但与模块内容不一致（通常为行尾差异），建议重装",
+                fix = "运行工具“同步 Android Gradle 模板 + 安装桥源”重装，然后点“重新检测”",
             });
 
             foreach (var cfg in new[]
@@ -275,15 +283,18 @@ namespace Jlyt.HwAds.Editor
             var g = new CheckGroup { title = "iOS · SDK 所需内容检测" };
             bool bridgeH = File.Exists("Assets/Plugins/iOS/HwAdsInterface.h");
             bool bridgeM = File.Exists("Assets/Plugins/iOS/HwAdsInterface.m");
+            bool bridgesOk = bridgeH && bridgeM && HwNativeBridgeInstaller.IosBridgeUpToDate();
             bool frameworkImported = Directory.Exists("Assets/Plugins/iOS/HwAdsNative") &&
                                      Directory.GetDirectories("Assets/Plugins/iOS/HwAdsNative", "HwAdsFramework.framework", SearchOption.AllDirectories).Length > 0;
 
             g.items.Add(new CheckItem
             {
                 name = "iOS 桥源 HwAdsInterface.h/.m",
-                state = bridgeH && bridgeM ? CheckState.Ok : CheckState.Missing,
-                detail = bridgeH && bridgeM ? "已安装到 Assets/Plugins/iOS" : "缺失",
-                fix = "运行工具“安装 iOS 桥源”",
+                state = !(bridgeH && bridgeM) ? CheckState.Missing : (bridgesOk ? CheckState.Ok : CheckState.Warn),
+                detail = !(bridgeH && bridgeM) ? "缺失于 Assets/Plugins/iOS"
+                       : bridgesOk ? "已安装且与模块版本一致"
+                       : "文件存在但与模块内容不一致（通常为行尾差异），建议重装",
+                fix = "运行工具“安装 iOS 桥源”重装，然后点“重新检测”",
             });
             g.items.Add(new CheckItem
             {
