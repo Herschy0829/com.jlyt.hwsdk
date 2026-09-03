@@ -514,7 +514,7 @@ namespace Jlyt.HwAds.Editor
 
                 // --- tools ----------------------------------------------
                 DrawSectionTitle("工具（当前平台：" + PlatformLabel(platform) + "）");
-                foreach (var tool in _tools)
+                foreach (var tool in _tools.ToArray())
                 {
                     DrawTool(tool);
                 }
@@ -534,7 +534,7 @@ namespace Jlyt.HwAds.Editor
                 DrawStatusSummary(missing, warn);
 
                 GUILayout.Space(6);
-                foreach (var group in _groups)
+                foreach (var group in _groups.ToArray())
                 {
                     DrawGroup(group);
                 }
