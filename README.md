@@ -32,7 +32,7 @@ Shared Unity package for the HW / GameBrain monetization SDK (AppLovin MAX based
 - iOS 二进制由“导入工具+校验”分发（不随包入库），framework 放 `Plugins/iOS` 由 Unity 链接，2022.3/6000 行为一致。
 
 ### 升级到 Unity 6000 时的核对清单
-1. 包解析后跑 `Tools/Jlyt/HwSDK → Diagnostics`：确认头部显示 `Editor: Unity 6xxx (supported)` 且 issues=0；
+1. 包解析后跑 `Window/JLYTSDK → Diagnostics`：确认头部显示 `Editor: Unity 6xxx (supported)` 且 issues=0；
 2. 如工程模板是历史手写内容，跑一次 `Sync Android Gradle Templates + Install Native Bridges`（重新生成托管段/仓库段并装桥源）；
 3. 保持 EDM4U(External Dependency Manager) 为支持 Unity 6 的版本（如 1.2.179+），Android Resolver 跑一次；
 4. 若从 2022.3 升级项目：Unity 6 会按自身 SDK 版本重写 `**TOKENS**` 默认值，勿把旧机器路径（NDK/JDK/keystore）带进模板——应依赖本机 EditorPrefs（诊断会检查）；

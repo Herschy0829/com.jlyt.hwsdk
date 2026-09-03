@@ -7,6 +7,12 @@
 
 ## Upstream version log (module changelog template)
 
+### 0.9.3 — 2026-09-03
+- 菜单迁移：`Window → JLYTSDK` 打开统一管理窗口（替代原 `Tools/Jlyt/HwSDK` 子菜单）。
+- 窗口按当前构建平台只显示对应工具（Android/iOS），并展示操作说明；
+- 打开窗口自动执行“SDK 所需内容检测”，缺失/建议项以红/黄标记并给出修复提示（含 AndroidManifest 必填项、配置文件、minSdk、托管段、桥源、iOS framework、JDK/NDK 建议）；
+- 文档入口点击直达浏览器（GitHub README 与接入升级 SOP）。
+
 ### 0.9.2 — 2026-09-03
 - Unity 兼容策略明确并写入 README/SOP/Diagnostics：支持 **2022.3 LTS 与 Unity 6000+**；2022.3 以下不支持（package.json `unity: 2022.3`）。
 - Diagnostics 输出编辑器版本 + 支持矩阵（`Editor: Unity xxxx (supported / NOT SUPPORTED below Unity 2022.3)`）。

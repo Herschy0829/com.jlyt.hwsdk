@@ -12,7 +12,7 @@
 | < 2022.3 | ❌ | 团队决策不处理（package.json `unity: 2022.3`） |
 
 **接入/升级到 Unity 6000 核对清单**（详见模块 README“Unity version compatibility”）：
-1. 包解析后运行 `Tools/Jlyt/HwSDK → Diagnostics`，头部应显示 `Editor: Unity 6xxx (supported)` 且 issues=0；
+1. 包解析后运行 `Window/JLYTSDK → Diagnostics`，头部应显示 `Editor: Unity 6xxx (supported)` 且 issues=0；
 2. 历史手写模板先跑 `Sync Android Gradle Templates + Install Native Bridges` 重新生成托管段；
 3. EDM4U 用支持 Unity 6 的版本（建议 ≥1.2.179）并跑一次 Android Resolver；
 4. 勿把旧机器 NDK/JDK/keystore 绝对路径带进 Unity 6 工程模板（诊断会提示）；
@@ -59,7 +59,7 @@
    if (HwAdsSdk.Instance.IsInterstitialReady) HwAdsSdk.Instance.ShowInterstitial();
    ```
 
-5. **菜单动作**：`Tools/Jlyt/HwSDK/`
+5. **菜单动作**：`Window/JLYTSDK/`
    - `Sync Android Gradle Templates + Install Native Bridges`：把版本清单写入 mainTemplate/settingsTemplate 的托管段，并把 Java/ObjC 桥源文件安装到 `Assets/Plugins/Android|iOS`（哈希校验，幂等）；
    - `Diagnostics / Validate Project`：检查 jar 重复、托管段、minSdk（≥24）、配置件、桥源文件是否就位；
    - `Import iOS SDK Release (zip)…`：把官方 iOS zip 导入 `Assets/Plugins/iOS/HwAdsNative/V9.8.75`（仅 framework 二进制，仓库不存）。
@@ -75,7 +75,7 @@
    - 若桥接口变化（如 init 参数），同步 `Runtime/Platform/*` 与 `Plugins/Android/HWAdsBridge.java`、`Plugins/iOS/HwAdsInterface.m`；
 2. `CHANGELOG.md` 记一行（依赖 diff + 迁移检查点）。
 3. 打 tag：包版本 `0.10.x` + 上游 tag `hw-9.8.XX`。
-4. 各工程：manifest 指向新 tag（或引用默认分支后 UPM Update）→ `Tools/Jlyt/HwSDK → Sync Android Gradle Templates` → `Diagnostics` 通过 → 按下方回归清单冒烟。
+4. 各工程：manifest 指向新 tag（或引用默认分支后 UPM Update）→ `Window/JLYTSDK → Sync Android Gradle Templates` → `Diagnostics` 通过 → 按下方回归清单冒烟。
 
 ## 三、回归清单
 
