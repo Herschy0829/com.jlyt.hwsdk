@@ -7,6 +7,10 @@
 
 ## Upstream version log (module changelog template)
 
+### 0.9.6 — 2026-09-03
+- 新增 Android 工具“设置 AdMob / Ad Manager App ID”：把每工程自己的 `ca-app-pub-…~…` 写入 `AndroidManifest.xml` 的 `com.google.android.gms.ads.APPLICATION_ID`。
+- 检测新增“AndroidManifest · AdMob APP_ID（每工程）”行：显示当前值并校验格式，行内可直接“设置”。
+
 ### 0.9.5 — 2026-09-03
 - 修复“始终提示可更新”：本地 UPM 短哈希与 GitHub 完整 SHA 的比较改为前 8 位前缀匹配；file:/Local 开发引用不再误报，检测/一键更新仅对 git 引用生效并给出提示。
 - 一键更新健壮性：git 模式且有新版时才执行，先清旧缓存与 lock 再 Resolve，由自动同步在重载后重写文件。

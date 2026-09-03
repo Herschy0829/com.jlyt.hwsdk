@@ -270,6 +270,22 @@ namespace Jlyt.HwAds.Editor
                 });
             }
 
+            // Per-project AdMob / Ad Manager App ID value (each game differs).
+            string admobId = HwAdmobIdWindow.ReadCurrentValue();
+            bool idOk = !string.IsNullOrEmpty(admobId) && !admobId.Contains("...") &&
+                        (admobId.StartsWith("ca-app-pub-") || admobId.StartsWith("pub-"));
+            g.items.Add(new CheckItem
+            {
+                name = "AndroidManifest · AdMob APP_ID（每工程）",
+                state = idOk ? CheckState.Ok : CheckState.Warn,
+                detail = idOk ? "当前值：" + admobId
+                       : string.IsNullOrEmpty(admobId) ? "未设置"
+                       : "当前值：" + admobId + "（格式可疑或含占位符）",
+                fix = "用工具“设置 AdMob / Ad Manager App ID”填入本项目自己的 ID（AdMob 控制台→App ID）",
+                quickFixLabel = "设置",
+                quickFix = HwAdmobIdWindow.Open,
+            });
+
             return g;
         }
 
@@ -459,6 +475,12 @@ namespace Jlyt.HwAds.Editor
                 name = "同步 Android Gradle 模板 + 安装桥源",
                 description = "把模块版本清单(依赖/仓库托管段)重新写入 mainTemplate/settingsTemplate，并把 HWAdsBridge.java 安装到 Assets/Plugins/Android。模块升级后必须执行。",
                 execute = RunSync,
+            });
+            _tools.Add(new ToolEntry
+            {
+                name = "设置 AdMob / Ad Manager App ID",
+                description = "打开小窗口：把每工程自己的 App ID（ca-app-pub-…~…，每游戏不同）写入 AndroidManifest.xml 的 APPLICATION_ID。",
+                execute = HwAdmobIdWindow.Open,
             });
             _tools.Add(new ToolEntry
             {
