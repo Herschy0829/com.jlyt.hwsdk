@@ -97,6 +97,12 @@ namespace Jlyt.HwAds
                 return;
             }
 
+            if (string.IsNullOrEmpty(placement) || !_initialized)
+            {
+                completed(HwAdsShowResult.NotReady(placement ?? string.Empty));
+                return;
+            }
+
             ShowReward(placement, ok =>
             {
                 completed(ok

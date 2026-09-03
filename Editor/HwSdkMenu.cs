@@ -6,12 +6,20 @@ namespace Jlyt.HwAds.Editor
     {
         const string Root = "Tools/Jlyt/HwSDK/";
 
-        [MenuItem(Root + "Sync Android Gradle Templates")]
+        [MenuItem(Root + "Sync Android Gradle Templates + Install Java Bridge")]
         public static void SyncGradleTemplates()
         {
             HwGradleSync.SyncMainTemplate(out string mainLog);
             HwGradleSync.SyncSettingsTemplate(out string settingsLog);
-            UnityEngine.Debug.Log($"[Jlyt.HwAds] {mainLog}\n[Jlyt.HwAds] {settingsLog}");
+            HwNativeBridgeInstaller.Install(out string bridgeLog);
+            UnityEngine.Debug.Log($"[Jlyt.HwAds] {mainLog}\n[Jlyt.HwAds] {settingsLog}\n[Jlyt.HwAds] {bridgeLog}");
+        }
+
+        [MenuItem(Root + "Install Android Java Bridge (copy into project)")]
+        public static void InstallJavaBridge()
+        {
+            HwNativeBridgeInstaller.Install(out string log);
+            UnityEngine.Debug.Log("[Jlyt.HwAds] " + log);
         }
 
         [MenuItem(Root + "Diagnostics / Validate Project")]
